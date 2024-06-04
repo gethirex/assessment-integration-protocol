@@ -1,0 +1,209 @@
+openapi: 3.0.0
+info:
+  title: Assessment Integration API
+  version: "1.0"
+  description: API for managing assessment tests and evaluations.
+
+paths:
+  /tests:
+    get:
+      summary: List all assessment tests
+      operationId: listTests
+      responses:
+        '200':
+          description: A list of assessment tests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AssessmentTest'
+
+  /tests/{testId}:
+    get:
+      summary: Get details of a specific test
+      operationId: getTest
+      parameters:
+        - name: testId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Test details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssessmentTestDetails'
+
+  /evaluations:
+    post:
+      summary: Create an evaluation invitation
+      operationId: createEvaluation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEvaluationParams'
+      responses:
+        '201':
+          description: Evaluation invitation created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateEvaluationResponse'
+
+  /evaluations/{testId}/{evaluationId}:
+    get:
+      summary: Retrieve a specific evaluation response
+      operationId: getEvaluation
+      parameters:
+        - name: testId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: evaluationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Evaluation response details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetEvaluationResponse'
+
+components:
+  schemas:
+    Candidate:
+      type: object
+      description: Information about the candidate being assessed.
+      properties:
+        first_name:
+          type: string
+          description: The candidate's first name.
+        last_name:
+          type: string
+          description: The candidate's last name.
+        email:
+          type: string
+          description: The candidate's email address.
+
+    AssessmentTest:
+      type: object
+      description: Basic information about an assessment test.
+      properties:
+        id:
+          type: string
+          description: The unique identifier for the assessment test.
+        label:
+          type: string
+          description: A descriptive label for the assessment test.
+
+    AssessmentTestDetails:
+      type: object
+      description: Detailed information about an assessment test.
+      properties:
+        id:
+          type: string
+          description: The unique identifier for the assessment test.
+        name:
+          type: string
+          description: The name of the assessment test.
+        duration:
+          type: integer
+          description: The duration of the assessment test in minutes.
+
+    CreateEvaluationParams:
+      type: object
+      description: Parameters required to create an evaluation invitation.
+      properties:
+        test_id:
+          type: string
+          description: The ID of the assessment test.
+        candidate:
+          $ref: '#/components/schemas/Candidate'
+          description: Information about the candidate.
+        valid_from:
+          type: string
+          format: date-time
+          nullable: true
+          description: The start time from which the evaluation is valid.
+        valid_to:
+          type: string
+          format: date-time
+          nullable: true
+          description: The end time until which the evaluation is valid.
+        force:
+          type: boolean
+          nullable: true
+          description: Force the creation of the evaluation even if conditions are not met.
+        force_reattempt:
+          type: boolean
+          nullable: true
+          description: Force a reattempt of the evaluation if it was previously attempted.
+        finished_webhook_url:
+          type: string
+          nullable: true
+          description: Webhook URL to be called when the evaluation is completed.
+
+    CreateEvaluationResponse:
+      type: object
+      description: Response returned after creating an evaluation invitation.
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the created evaluation invitation.
+
+    GetEvaluationResponse:
+      type: object
+      description: Detailed information about an evaluation response.
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the evaluation.
+        status:
+          type: string
+          description: The current status of the evaluation.
+          enum: [pending, completed]
+        start_time:
+          type: string
+          format: date-time
+          nullable: true
+          description: The start time of the evaluation.
+        end_time:
+          type: string
+          format: date-time
+          nullable: true
+          description: The end time of the evaluation.
+        score:
+          type: number
+          format: float
+          nullable: true
+          description: The score achieved by the candidate in the evaluation.
+        percentage_score:
+          type: number
+          format: float
+          nullable: true
+          description: The percentage score achieved by the candidate.
+        report_url:
+          type: string
+          nullable: true
+          description: The URL to the detailed evaluation report.
+        public_report_url:
+          type: string
+          nullable: true
+          description: The public URL to the evaluation report.
+        details:
+          type: object
+          additionalProperties: true
+          description: Additional details of the evaluation.
+        cheated:
+          type: boolean
+          nullable: true
+          description: Indicates if cheating was detected during the evaluation.
